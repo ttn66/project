@@ -160,7 +160,8 @@ namespace data2CIM
                 {
                     string value = lineStr[index];                                      
                     StringFile += value;                    
-                }                 
+                }
+                StringFile += '\n';
             }            
             
             Encoding W1252 = Encoding.GetEncoding(1252);
