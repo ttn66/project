@@ -1,13 +1,7 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.OleDb;
-using System.Linq;
 using System.Web;
-using System.Web.UI;
-using System.Web.UI.WebControls;
 using System.IO;
 using System.Text;
 
@@ -71,11 +65,18 @@ namespace data2CIM
             MergFile(dt, OriginalTemplate);            
         }
 
-
-        public void MergFile(DataTable dataTable, string OriginalString)
+        public void MergFile(DataTable dataTable, string FullString)
         {
             DateTime localDate = DateTime.Now;
             string DateTimeNow = localDate.Year.ToString() + localDate.Month.ToString() + localDate.Day.ToString() + localDate.Hour.ToString() + localDate.Minute.ToString() + localDate.Second.ToString();
+            
+            //divide string text
+            var pos = FullString.ToString().IndexOf("@@format");
+            string[] FormatString = FullString.ToString().Remove(0, pos).Split(' '); //remove string before @@format
+            string OriginalString = FullString.ToString().Remove(pos); //remove string after @@format
+            
+            string indexDate = FormatString[FormatString.Length - 2].Trim('[', ']');
+            string formatDate = FormatString[FormatString.Length - 1].Trim('[', ']');
             
             string[] CleanStr = OriginalString.Replace("\r\n", " ").Split(' ');      
             string[] HalfClean = OriginalString.Replace("\n", " ").Split(' ');
@@ -116,7 +117,20 @@ namespace data2CIM
             //Create header string from data table
             string[] headerTable = new string[dataTable.Columns.Count];
             for (int i = 0; i < dataTable.Columns.Count; i++)
+            {
                 headerTable[i] = (dataTable.Columns[i].ColumnName);
+            }
+            
+            //Position Date
+            var posDate = 0;
+            for (int i = 0; i < headerTable.Length; i++)
+            {
+                if (headerTable[i].Contains(indexDate))
+                {
+                    posDate = i;
+                    break;
+                }
+            }
 
             //Convert value of header to corresponding position in the CIM string
             for (int Index =0; Index<headerTable.Length;Index++)
@@ -140,6 +154,18 @@ namespace data2CIM
                 for (int colIndex = 0; colIndex < headerTable.Length; colIndex++)
                 {
                     string value = dataTable.Rows[rowIndex][colIndex].ToString();
+                    if (colIndex == posDate)
+                    {
+                        var Date = dataTable.Rows[rowIndex][posDate];
+                        try
+                        {
+                            Date = Convert.ToDateTime(Date).ToString(formatDate);
+                            value = Date.ToString();
+                        }
+                        catch
+                        {
+                        }
+                    }
                     int jumpedPosition = int.Parse(headerTable[colIndex]);
                     lineStr[jumpedPosition] = value;
                 }
@@ -181,8 +207,6 @@ namespace data2CIM
             response.TransmitFile(pathCIM);
             response.Flush();
             response.End();
-
-
         }            
 
         public void PrintTable(DataTable dt)
