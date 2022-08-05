@@ -211,7 +211,6 @@ namespace data2CIM
 
         public void PrintTable(DataTable dt)
         {
-
             for (int i = 0; i < dt.Columns.Count; i++)
             {
                 Response.Write($"{dt.Columns[i]} ");
@@ -225,9 +224,6 @@ namespace data2CIM
                 }
                 Response.Write("<br>");
             }
-
-        }   
-            
+        }               
     }
-
 }
